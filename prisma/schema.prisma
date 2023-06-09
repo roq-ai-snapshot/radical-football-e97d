@@ -1,0 +1,97 @@
+generator client {
+  provider = "prisma-client-js"
+  previewFeatures = ["clientExtensions"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model academy {
+  id                     String                   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name                   String                   @db.VarChar(255)
+  description            String?                  @db.VarChar
+  image                  String?                  @db.VarChar
+  created_at             DateTime                 @default(now()) @db.Timestamp(6)
+  updated_at             DateTime                 @default(now()) @db.Timestamp(6)
+  user_id                String                   @db.Uuid
+  tenant_id              String                   @db.VarChar(255)
+  user                   user                     @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  performance_evaluation performance_evaluation[]
+  player_profile         player_profile[]
+  training_session       training_session[]
+}
+
+model coach_player {
+  id                                String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  coach_id                          String   @db.Uuid
+  player_id                         String   @db.Uuid
+  created_at                        DateTime @default(now()) @db.Timestamp(6)
+  updated_at                        DateTime @default(now()) @db.Timestamp(6)
+  user_coach_player_coach_idTouser  user     @relation("coach_player_coach_idTouser", fields: [coach_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  user_coach_player_player_idTouser user     @relation("coach_player_player_idTouser", fields: [player_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model performance_evaluation {
+  id                                          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  player_id                                   String   @db.Uuid
+  coach_id                                    String   @db.Uuid
+  academy_id                                  String   @db.Uuid
+  date                                        DateTime @db.Date
+  rating                                      Int
+  comment                                     String?  @db.VarChar(255)
+  created_at                                  DateTime @default(now()) @db.Timestamp(6)
+  updated_at                                  DateTime @default(now()) @db.Timestamp(6)
+  academy                                     academy  @relation(fields: [academy_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  user_performance_evaluation_coach_idTouser  user     @relation("performance_evaluation_coach_idTouser", fields: [coach_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  user_performance_evaluation_player_idTouser user     @relation("performance_evaluation_player_idTouser", fields: [player_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model player_profile {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  player_id     String   @db.Uuid
+  academy_id    String   @db.Uuid
+  position      String   @db.VarChar(255)
+  date_of_birth DateTime @db.Date
+  height        Int
+  weight        Int
+  created_at    DateTime @default(now()) @db.Timestamp(6)
+  updated_at    DateTime @default(now()) @db.Timestamp(6)
+  academy       academy  @relation(fields: [academy_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  user          user     @relation(fields: [player_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model training_session {
+  id                                    String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  player_id                             String   @db.Uuid
+  coach_id                              String   @db.Uuid
+  academy_id                            String   @db.Uuid
+  date                                  DateTime @db.Date
+  duration                              Int
+  focus                                 String   @db.VarChar(255)
+  created_at                            DateTime @default(now()) @db.Timestamp(6)
+  updated_at                            DateTime @default(now()) @db.Timestamp(6)
+  academy                               academy  @relation(fields: [academy_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  user_training_session_coach_idTouser  user     @relation("training_session_coach_idTouser", fields: [coach_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  user_training_session_player_idTouser user     @relation("training_session_player_idTouser", fields: [player_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model user {
+  id                                                            String                   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email                                                         String                   @unique @db.VarChar(255)
+  firstName                                                     String?                  @db.VarChar(255)
+  lastName                                                      String?                  @db.VarChar(255)
+  roq_user_id                                                   String                   @db.VarChar(255)
+  tenant_id                                                     String                   @db.VarChar(255)
+  created_at                                                    DateTime                 @default(now()) @db.Timestamp(6)
+  updated_at                                                    DateTime                 @default(now()) @db.Timestamp(6)
+  academy                                                       academy[]
+  coach_player_coach_player_coach_idTouser                      coach_player[]           @relation("coach_player_coach_idTouser")
+  coach_player_coach_player_player_idTouser                     coach_player[]           @relation("coach_player_player_idTouser")
+  performance_evaluation_performance_evaluation_coach_idTouser  performance_evaluation[] @relation("performance_evaluation_coach_idTouser")
+  performance_evaluation_performance_evaluation_player_idTouser performance_evaluation[] @relation("performance_evaluation_player_idTouser")
+  player_profile                                                player_profile[]
+  training_session_training_session_coach_idTouser              training_session[]       @relation("training_session_coach_idTouser")
+  training_session_training_session_player_idTouser             training_session[]       @relation("training_session_player_idTouser")
+}
